@@ -46,6 +46,8 @@ export function CategoryFormDialog({
   //   const { toast } = useToast();
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
 
   const updateFormData = (key, value) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -56,7 +58,7 @@ export function CategoryFormDialog({
       if (editData) {
         // For edit mode, populate all fields including individual image fields
         const editFormData = { ...editData };
-        
+
         // Extract individual image fields from the images array
         if (editData.images && Array.isArray(editData.images)) {
           editFormData.image0 = editData.images[0] || '';
@@ -68,7 +70,7 @@ export function CategoryFormDialog({
           editFormData.image1 = editData.image1 || '';
           editFormData.image2 = editData.image2 || '';
         }
-        
+
         setFormData(editFormData);
       } else {
         // For create mode
@@ -84,18 +86,18 @@ export function CategoryFormDialog({
     }
   }, [open, editData, city]);
 
-    
+
 
   // Function to handle location link changes and auto-fill lat/lon
   // const handleLocationLinkChange = (value) => {
   //   // updateFormData('locationLink', value);
   //   setFormData(prev=>({'locationLink': value}));
-    
+
   //   // Extract coordinates from the URL
   //   const { lat, lon } = extractLatLonFromUrl(value);
 
   //   console.log('Extracted coordinates:', { lat, lon }); // Debug log
-    
+
   //   if (lat !== null && lon !== null) {
   //     // Update lat and lon fields if they exist in the form
   //     setFormData(prev => ({
@@ -106,69 +108,69 @@ export function CategoryFormDialog({
   //   }
   // };
 
-//   const handleLocationLinkChange = (value) => {
-//   // First update the locationLink field while preserving other fields
-//   setFormData(prev => ({ ...prev, locationLink: value }));
-  
-//   // Extract coordinates from the URL
-//   const { lat, lon } = extractLatLonFromUrl(value);
+  //   const handleLocationLinkChange = (value) => {
+  //   // First update the locationLink field while preserving other fields
+  //   setFormData(prev => ({ ...prev, locationLink: value }));
 
-//   console.log('Extracted coordinates:', { lat, lon }); // Debug log
-  
-//   if (lat !== null && lon !== null) {
-//     // Update lat and lon fields while preserving all other fields
-//     setFormData(prev => ({
-//       ...prev, // This preserves all existing fields
-//       lat: lat,
-//       lon: lon
-//     }));
-//   }
-// };
+  //   // Extract coordinates from the URL
+  //   const { lat, lon } = extractLatLonFromUrl(value);
 
-const handleLocationLinkChange = (value, fieldKey) => {
-  // First update the locationLink field while preserving other fields
-  setFormData(prev => ({ ...prev, [fieldKey]: value }));
-  
-  // Extract coordinates from the URL
-  const { lat, lon } = extractLatLonFromUrl(value);
+  //   console.log('Extracted coordinates:', { lat, lon }); // Debug log
 
-  console.log('Extracted coordinates:', { lat, lon, fieldKey }); // Debug log
-  
-  if (lat !== null && lon !== null) {
-    // For Miscellaneous category, map location links to their corresponding lat/lon fields
-    let latField, lonField;
-    
-    switch (fieldKey) {
-      case 'hospitalLocationLink':
-        latField = 'hospitalLat';
-        lonField = 'hospitalLon';
-        break;
-      case 'PoliceLocationLink':
-        latField = 'PoliceLat';
-        lonField = 'PoliceLon';
-        break;
-      case 'parkingLocationLink':
-        latField = 'parkingLat';
-        lonField = 'parkingLon';
-        break;
-      case 'publicWashroomsLocationLink':
-        latField = 'publicWashroomsLat';
-        lonField = 'publicWashroomsLon';
-        break;
-      default:
-        // For other categories, use generic lat/lon fields
-        latField = 'lat';
-        lonField = 'lon';
+  //   if (lat !== null && lon !== null) {
+  //     // Update lat and lon fields while preserving all other fields
+  //     setFormData(prev => ({
+  //       ...prev, // This preserves all existing fields
+  //       lat: lat,
+  //       lon: lon
+  //     }));
+  //   }
+  // };
+
+  const handleLocationLinkChange = (value, fieldKey) => {
+    // First update the locationLink field while preserving other fields
+    setFormData(prev => ({ ...prev, [fieldKey]: value }));
+
+    // Extract coordinates from the URL
+    const { lat, lon } = extractLatLonFromUrl(value);
+
+    console.log('Extracted coordinates:', { lat, lon, fieldKey }); // Debug log
+
+    if (lat !== null && lon !== null) {
+      // For Miscellaneous category, map location links to their corresponding lat/lon fields
+      let latField, lonField;
+
+      switch (fieldKey) {
+        case 'hospitalLocationLink':
+          latField = 'hospitalLat';
+          lonField = 'hospitalLon';
+          break;
+        case 'PoliceLocationLink':
+          latField = 'PoliceLat';
+          lonField = 'PoliceLon';
+          break;
+        case 'parkingLocationLink':
+          latField = 'parkingLat';
+          lonField = 'parkingLon';
+          break;
+        case 'publicWashroomsLocationLink':
+          latField = 'publicWashroomsLat';
+          lonField = 'publicWashroomsLon';
+          break;
+        default:
+          // For other categories, use generic lat/lon fields
+          latField = 'lat';
+          lonField = 'lon';
+      }
+
+      // Update lat and lon fields while preserving all other fields
+      setFormData(prev => ({
+        ...prev, // This preserves all existing fields
+        [latField]: lat,
+        [lonField]: lon
+      }));
     }
-    
-    // Update lat and lon fields while preserving all other fields
-    setFormData(prev => ({
-      ...prev, // This preserves all existing fields
-      [latField]: lat,
-      [lonField]: lon
-    }));
-  }
-};
+  };
 
   const getFormFields = () => {
     switch (category) {
@@ -189,7 +191,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'image2', label: 'Image 3 URL', type: 'text' },
           { key: 'flagShip', label: 'Flagship Property', type: 'checkbox' },
           // { key: 'premium', label: 'Premium', type: 'checkbox' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
       case 'GeneralCityInfo':
         return [
@@ -200,7 +202,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'bestTimeToVisit', label: 'Best Time to Visit', type: 'text' },
           { key: 'cityHistory', label: 'City History', type: 'textarea' },
           { key: 'coverImage', label: 'Cover Image URL', type: 'text' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
       case 'Activities':
         return [
@@ -211,7 +213,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'fee', label: 'Entry Fee/Cost', type: 'text' },
           { key: 'image0', label: 'Image URL', type: 'text' },
           { key: 'videos', label: 'Video URLs', type: 'array' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
       case 'Connectivity':
         return [
@@ -221,7 +223,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'lon', label: 'Longitude', type: 'number' },
           { key: 'locationLink', label: 'Location Link', type: 'text' },
           { key: 'majorFlightsTrainsBuses', label: 'Major Flights/Trains/Buses', type: 'textarea' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
       case 'Food':
         return [
@@ -234,8 +236,8 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'category', label: 'Category', type: 'text' },
           { key: 'vegOrNonVeg', label: 'Veg/Non-Veg', type: 'select', options: ['Veg', 'NonVeg', 'Both'] },
           { key: 'valueForMoney', label: 'Value for Money (0-5)', type: 'number' },
-          { key: 'service', label: 'Service Rating (0-5)', type: 'number'},
-          { key: 'taste', label: 'Taste Rating (0-5)', type: 'number'},
+          { key: 'service', label: 'Service Rating (0-5)', type: 'number' },
+          { key: 'taste', label: 'Taste Rating (0-5)', type: 'number' },
           { key: 'hygiene', label: 'Hygiene Rating (0-5)', type: 'number' },
           { key: 'menuSpecial', label: 'Menu Specialties', type: 'textarea' },
           { key: 'menuLink', label: 'Menu Link', type: 'text' },
@@ -248,7 +250,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'image1', label: 'Image 2 URL', type: 'text' },
           { key: 'image2', label: 'Image 3 URL', type: 'text' },
           { key: 'videos', label: 'Video URLs', type: 'array' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       case 'HiddenGems':
@@ -270,7 +272,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'image1', label: 'Image 2 URL', type: 'text' },
           { key: 'image2', label: 'Image 3 URL', type: 'text' },
           { key: 'videos', label: 'Video URLs', type: 'array' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       case 'LocalTransport':
@@ -280,7 +282,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'autoPrice', label: 'Auto Price', type: 'text' },
           { key: 'cabPrice', label: 'Cab Price', type: 'text' },
           { key: 'bikePrice', label: 'Bike Price', type: 'text' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       case 'NearbyTouristSpots':
@@ -303,7 +305,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'image1', label: 'Image 2 URL', type: 'text' },
           { key: 'image2', label: 'Image 3 URL', type: 'text' },
           { key: 'videos', label: 'Video URLs', type: 'array' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       case 'PlacesToVisit':
@@ -325,7 +327,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'image1', label: 'Image 2 URL', type: 'text' },
           { key: 'image2', label: 'Image 3 URL', type: 'text' },
           { key: 'videos', label: 'Video URLs', type: 'array' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       case 'Shopping':
@@ -345,7 +347,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'image0', label: 'Image 1 URL', type: 'text' },
           { key: 'image1', label: 'Image 2 URL', type: 'text' },
           { key: 'image2', label: 'Image 3 URL', type: 'text' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       case 'Miscellaneous':
@@ -367,7 +369,7 @@ const handleLocationLinkChange = (value, fieldKey) => {
           { key: 'publicWashroomsLocationLink', label: 'Washrooms Location Link', type: 'text' },
           { key: 'publicWashroomsLat', label: 'Washrooms Latitude', type: 'number' },
           { key: 'publicWashroomsLon', label: 'Washrooms Longitude', type: 'number' },
-          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'],default: 'FREE' },
+          { key: 'premium', label: 'Premium', type: 'select', options: ['FREE', 'A', 'B'], default: 'FREE' },
         ];
 
       default:
@@ -442,33 +444,34 @@ const handleLocationLinkChange = (value, fieldKey) => {
   const fields = getFormFields();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto bg-white border border-blue-100 shadow-professional">
-        <DialogHeader className="space-y-3 pb-4 border-b border-blue-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center shadow-md">
-              {editData ? <Edit className="w-5 h-5 text-blue-400" /> : <Plus className="w-5 h-5 text-blue-400" />}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto bg-white border border-blue-100 shadow-professional">
+          <DialogHeader className="space-y-3 pb-4 border-b border-blue-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center shadow-md">
+                {editData ? <Edit className="w-5 h-5 text-blue-400" /> : <Plus className="w-5 h-5 text-blue-400" />}
+              </div>
+              <div>
+                <DialogTitle className="text-xl text-slate-800">
+                  {editData ? 'Edit' : 'Add'} {category} Entry
+                </DialogTitle>
+                <DialogDescription className="text-slate-600">
+                  {editData ? 'Update' : 'Create'} {category.toLowerCase()} data for {city.cityName}
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="text-xl text-slate-800">
-                {editData ? 'Edit' : 'Add'} {category} Entry
-              </DialogTitle>
-              <DialogDescription className="text-slate-600">
-                {editData ? 'Update' : 'Create'} {category.toLowerCase()} data for {city.cityName}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-5 max-h-[50vh] overflow-y-auto pr-2">
-            {fields.map((field) => (
-              <div key={field.key} className="space-y-2">
-                <Label htmlFor={field.key} className="text-slate-700">
-                  {field.label} {field.required && <span className="text-red-500">*</span>}
-                </Label>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid gap-5 max-h-[50vh] overflow-y-auto pr-2">
+              {fields.map((field) => (
+                <div key={field.key} className="space-y-2">
+                  <Label htmlFor={field.key} className="text-slate-700">
+                    {field.label} {field.required && <span className="text-red-500">*</span>}
+                  </Label>
 
-                {/* {field.type === 'textarea' ? (
+                  {/* {field.type === 'textarea' ? (
                   <Textarea
                     id={field.key}
                     value={formData[field.key] || ''}
@@ -513,104 +516,204 @@ const handleLocationLinkChange = (value, fieldKey) => {
                   />
                 )} */}
 
-                {field.key === 'locationLink' || 
- field.key === 'hospitalLocationLink' || 
- field.key === 'PoliceLocationLink' || 
- field.key === 'parkingLocationLink' || 
- field.key === 'publicWashroomsLocationLink' ? (
-                  <Input
-                    id={field.key}
-                    type={field.type}
-                    value={formData[field.key] || ''}
-                    onChange={(e) => handleLocationLinkChange(e.target.value,field.key)}
-                    required={field.required}
-                    placeholder="Paste Google Maps link to auto-fill coordinates"
-                    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white"
-                  />
-                ) : field.type === 'textarea' ? (
-  <Textarea
-    id={field.key}
-    value={formData[field.key] || ''}
-    onChange={(e) => updateFormData(field.key, e.target.value)}
-    required={field.required}
-    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white min-h-[80px]"
-  />
-) : field.type === 'checkbox' ? (
-  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-    <Checkbox
-      id={field.key}
-      checked={!!formData[field.key]}
-      onCheckedChange={(checked) => updateFormData(field.key, checked)}
-      className="border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-    />
-    <Label htmlFor={field.key} className="text-sm text-slate-700 cursor-pointer">
-      {field.label}
-    </Label>
-  </div>
-) : field.type === 'array' ? (
-  <Input
-    id={field.key}
-    value={
-      Array.isArray(formData[field.key])
-        ? formData[field.key].join(', ')
-        : formData[field.key] || ''
-    }
-    onChange={(e) => updateFormData(field.key, e.target.value)}
-    placeholder="Separate multiple items with commas"
-    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white"
-  />
-) : field.type === 'select' ? (
-  <select
-    id={field.key}
-    value={formData[field.key] || field.default || ''}
-    onChange={(e) => updateFormData(field.key, e.target.value)}
-    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white rounded-md p-2"
-  >
-    {field.options.map((option) => (
-      <option key={option} value={option}>
-        {option}
-      </option>
-    ))}
-  </select>
-) : (
-  <Input
-    id={field.key}
-    type={field.type}
-    value={formData[field.key] || ''}
-    onChange={(e) => updateFormData(field.key, e.target.value)}
-    required={field.required}
-    min={field.min}
-    max={field.max}
-    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white"
-  />
-)}
+                  {field.key === 'locationLink' ||
+                    field.key === 'hospitalLocationLink' ||
+                    field.key === 'PoliceLocationLink' ||
+                    field.key === 'parkingLocationLink' ||
+                    field.key === 'publicWashroomsLocationLink' ? (
+                    <Input
+                      id={field.key}
+                      type={field.type}
+                      value={formData[field.key] || ''}
+                      onChange={(e) => handleLocationLinkChange(e.target.value, field.key)}
+                      required={field.required}
+                      placeholder="Paste Google Maps link to auto-fill coordinates"
+                      className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white"
+                    />
+                  ) : field.type === 'textarea' ? (
+                    <Textarea
+                      id={field.key}
+                      value={formData[field.key] || ''}
+                      onChange={(e) => updateFormData(field.key, e.target.value)}
+                      required={field.required}
+                      className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white min-h-[80px]"
+                    />
+                  ) : field.type === 'checkbox' ? (
+                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <Checkbox
+                        id={field.key}
+                        checked={!!formData[field.key]}
+                        onCheckedChange={(checked) => updateFormData(field.key, checked)}
+                        className="border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                      />
+                      <Label htmlFor={field.key} className="text-sm text-slate-700 cursor-pointer">
+                        {field.label}
+                      </Label>
+                    </div>
+                  ) : field.type === 'array' ? (
+                    <Input
+                      id={field.key}
+                      value={
+                        Array.isArray(formData[field.key])
+                          ? formData[field.key].join(', ')
+                          : formData[field.key] || ''
+                      }
+                      onChange={(e) => updateFormData(field.key, e.target.value)}
+                      placeholder="Separate multiple items with commas"
+                      className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white"
+                    />
+                  ) : field.type === 'select' ? (
+                    <select
+                      id={field.key}
+                      value={formData[field.key] || field.default || ''}
+                      onChange={(e) => updateFormData(field.key, e.target.value)}
+                      className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white rounded-md p-2"
+                    >
+                      {field.options.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        id={field.key}
+                        type={field.type}
+                        value={formData[field.key] || ''}
+                        onChange={(e) => updateFormData(field.key, e.target.value)}
+                        required={field.required}
+                        min={field.min}
+                        max={field.max}
+                        className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white flex-1"
+                      />
+                      {(field.key.toLowerCase().includes('image') || field.label.toLowerCase().includes('image')) && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (formData[field.key]?.trim()) {
+                              setPreviewUrl(formData[field.key]);
+                              setShowPreview(true);
+                            }
+                          }}
+                          disabled={!formData[field.key]?.trim()}
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50 px-3"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
 
-          <div className="flex gap-3 justify-end pt-4 border-t border-blue-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            <div className="flex gap-3 justify-end pt-4 border-t border-blue-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="gradient-primary text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {loading ? "Saving..." : editData ? "Save Changes" : "Create Entry"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Modal */}
+      {
+        showPreview && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 100,
+              padding: '2rem'
+            }}
+            onClick={() => setShowPreview(false)}
+          >
+            <div
+              style={{
+                position: 'relative',
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                backgroundColor: 'white',
+                borderRadius: '0.5rem',
+                overflow: 'hidden',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="w-4 h-4 mr-2" />
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="gradient-primary text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {loading ? "Saving..." : editData ? "Save Changes" : "Create Entry"}
-            </Button>
+              <button
+                onClick={() => setShowPreview(false)}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  padding: '0.5rem',
+                  backgroundColor: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#f1f5f9';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = 'white';
+                }}
+              >
+                <svg style={{ width: '1.25rem', height: '1.25rem', color: '#64748b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+              <img
+                src={previewUrl}
+                alt="Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '90vh',
+                  display: 'block',
+                  objectFit: 'contain'
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML += '<div style="padding: 2rem; text-align: center; color: #ef4444;">Failed to load image</div>';
+                }}
+              />
+            </div>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        )}
+    </>
   );
 }
