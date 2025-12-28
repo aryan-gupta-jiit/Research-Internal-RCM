@@ -15,23 +15,91 @@ import { categoryApi } from "../services/api";
 import { Layers, Save, X, Plus, Edit } from "lucide-react";
 // import { useToast } from "../hooks/use-toast";
 
+// const extractLatLonFromUrl = (url) => {
+//   if (!url) return { lat: null, lon: null };
+
+//   try {
+//     // Method 1: Extract from @lat,lon format (most common in Google Maps URLs)
+//     const atSymbolMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+//     if (atSymbolMatch) {
+//       return {
+//         lat: parseFloat(atSymbolMatch[1]),
+//         lon: parseFloat(atSymbolMatch[2])
+//       };
+//     }
+
+//     return { lat: null, lon: null };
+//   } catch (error) {
+//     console.error('Error parsing URL:', error);
+//     return { lat: null, lon: null };
+//   }
+// };
+
 const extractLatLonFromUrl = (url) => {
   if (!url) return { lat: null, lon: null };
 
   try {
+    console.log('Parsing URL for coordinates:', url);
+
     // Method 1: Extract from @lat,lon format (most common in Google Maps URLs)
-    const atSymbolMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    // This regex looks for @ followed by numbers (including decimals), comma, numbers, and optional zoom/z
+    const atSymbolMatch = url.match(/@([-\d.]+),([-\d.]+)/);
+
     if (atSymbolMatch) {
+      console.log('Coordinates found via @ pattern:', atSymbolMatch[1], atSymbolMatch[2]);
       return {
         lat: parseFloat(atSymbolMatch[1]),
         lon: parseFloat(atSymbolMatch[2])
       };
     }
 
+    // Method 2: Try alternative patterns
+    // Pattern for coordinates in !3d and !4d format (sometimes used in Google Maps)
+    const dPatternMatch = url.match(/!3d([-\d.]+)!4d([-\d.]+)/);
+    if (dPatternMatch) {
+      console.log('Coordinates found via !3d!4d pattern:', dPatternMatch[1], dPatternMatch[2]);
+      return {
+        lat: parseFloat(dPatternMatch[1]),
+        lon: parseFloat(dPatternMatch[2])
+      };
+    }
+
+    // Method 3: Try looking for coordinates anywhere in the URL
+    const coordPattern = /([-\d.]+),\s*([-\d.]+)/;
+    const coordMatch = url.match(coordPattern);
+    if (coordMatch) {
+      console.log('General coordinates found:', coordMatch[1], coordMatch[2]);
+      return {
+        lat: parseFloat(coordMatch[1]),
+        lon: parseFloat(coordMatch[2])
+      };
+    }
+
+    console.log('No coordinates found in URL');
     return { lat: null, lon: null };
   } catch (error) {
     console.error('Error parsing URL:', error);
     return { lat: null, lon: null };
+  }
+};
+
+const extractNameFromUrl = (url) => {
+  if (!url) return null;
+
+  try {
+    // Extract the part between /place/ and the next / or ,
+    // URL format: https://www.google.com/maps/place/The+Ramayana+Hotel,+Ayodhya/@...
+    const match = url.match(/\/place\/([^/@,]+)/);
+    if (match && match[1]) {
+      // Replace + with spaces and decode any URL encoding
+      const name = decodeURIComponent(match[1].replace(/\+/g, ' '));
+      return name;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error extracting name from URL:', error);
+    return null;
   }
 };
 
@@ -127,6 +195,51 @@ export function CategoryFormDialog({
   //   }
   // };
 
+  // const handleLocationLinkChange = (value, fieldKey) => {
+  //   // First update the locationLink field while preserving other fields
+  //   setFormData(prev => ({ ...prev, [fieldKey]: value }));
+
+  //   // Extract coordinates from the URL
+  //   const { lat, lon } = extractLatLonFromUrl(value);
+
+  //   console.log('Extracted coordinates:', { lat, lon, fieldKey }); // Debug log
+
+  //   if (lat !== null && lon !== null) {
+  //     // For Miscellaneous category, map location links to their corresponding lat/lon fields
+  //     let latField, lonField;
+
+  //     switch (fieldKey) {
+  //       case 'hospitalLocationLink':
+  //         latField = 'hospitalLat';
+  //         lonField = 'hospitalLon';
+  //         break;
+  //       case 'PoliceLocationLink':
+  //         latField = 'PoliceLat';
+  //         lonField = 'PoliceLon';
+  //         break;
+  //       case 'parkingLocationLink':
+  //         latField = 'parkingLat';
+  //         lonField = 'parkingLon';
+  //         break;
+  //       case 'publicWashroomsLocationLink':
+  //         latField = 'publicWashroomsLat';
+  //         lonField = 'publicWashroomsLon';
+  //         break;
+  //       default:
+  //         // For other categories, use generic lat/lon fields
+  //         latField = 'lat';
+  //         lonField = 'lon';
+  //     }
+
+  //     // Update lat and lon fields while preserving all other fields
+  //     setFormData(prev => ({
+  //       ...prev, // This preserves all existing fields
+  //       [latField]: lat,
+  //       [lonField]: lon
+  //     }));
+  //   }
+  // };
+
   const handleLocationLinkChange = (value, fieldKey) => {
     // First update the locationLink field while preserving other fields
     setFormData(prev => ({ ...prev, [fieldKey]: value }));
@@ -134,7 +247,12 @@ export function CategoryFormDialog({
     // Extract coordinates from the URL
     const { lat, lon } = extractLatLonFromUrl(value);
 
-    console.log('Extracted coordinates:', { lat, lon, fieldKey }); // Debug log
+    // Extract name from the URL
+    const name = extractNameFromUrl(value);
+
+    console.log('Extracted data:', { lat, lon, name, fieldKey }); // Debug log
+
+    const updates = {};
 
     if (lat !== null && lon !== null) {
       // For Miscellaneous category, map location links to their corresponding lat/lon fields
@@ -163,11 +281,68 @@ export function CategoryFormDialog({
           lonField = 'lon';
       }
 
-      // Update lat and lon fields while preserving all other fields
+      updates[latField] = lat;
+      updates[lonField] = lon;
+    }
+
+    // Extract and store name based on category and field
+    if (name !== null) {
+      switch (category) {
+        case 'Accommodation':
+          if (fieldKey === 'locationLink') {
+            updates['hotels'] = name;
+          }
+          break;
+        case 'Food':
+          if (fieldKey === 'locationLink') {
+            updates['foodPlace'] = name;
+          }
+          break;
+        case 'HiddenGems':
+          if (fieldKey === 'locationLink') {
+            updates['hiddenGem'] = name;
+          }
+          break;
+        case 'NearbyTouristSpots':
+        case 'PlacesToVisit':
+          if (fieldKey === 'locationLink') {
+            updates['places'] = name;
+          }
+          break;
+        case 'Shopping':
+          if (fieldKey === 'locationLink') {
+            updates['shops'] = name;
+          }
+          break;
+        case 'Miscellaneous':
+          switch (fieldKey) {
+            case 'hospitalLocationLink':
+              updates['hospital'] = name;
+              break;
+            case 'PoliceLocationLink':
+              updates['Police'] = name || 'Police Station';
+              break;
+            case 'parkingLocationLink':
+              updates['parking'] = name;
+              break;
+            case 'publicWashroomsLocationLink':
+              updates['publicWashrooms'] = name;
+              break;
+          }
+          break;
+        default:
+          // For other categories, store in generic name field if it exists
+          if (fieldKey === 'locationLink' && fields.some(f => f.key === 'name')) {
+            updates['name'] = name;
+          }
+      }
+    }
+
+    // Apply all updates at once
+    if (Object.keys(updates).length > 0) {
       setFormData(prev => ({
-        ...prev, // This preserves all existing fields
-        [latField]: lat,
-        [lonField]: lon
+        ...prev,
+        ...updates
       }));
     }
   };
@@ -527,7 +702,7 @@ export function CategoryFormDialog({
                       value={formData[field.key] || ''}
                       onChange={(e) => handleLocationLinkChange(e.target.value, field.key)}
                       required={field.required}
-                      placeholder="Paste Google Maps link to auto-fill coordinates"
+                      placeholder="Paste Google Maps link to auto-fill name and coordinates"
                       className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white"
                     />
                   ) : field.type === 'textarea' ? (
