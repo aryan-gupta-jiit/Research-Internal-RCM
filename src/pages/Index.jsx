@@ -37,11 +37,13 @@ import {
   UserPlus,
   Activity,
   LogOut,
-  User
-  
+  User,
+  Edit
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CreateAccountModal from "./Signup";
+import { EditCityDialog } from "../components/EditCityDialog";
+import { citiesApi } from "../services/api";
 
 
 const Index = () => {
@@ -62,12 +64,13 @@ const Index = () => {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
   const [dataStats, setDataStats] = useState({});
-const navigate = useNavigate();
+  const navigate = useNavigate();
   // const { toast } = useToast();
 
   const [isCreateAccountOpen, setIsCreateAccountOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  
+  const [showEditCity, setShowEditCity] = useState(false);
+
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user.role === 'admin';
 
@@ -75,6 +78,25 @@ const navigate = useNavigate();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/login';
+  };
+
+  const handleEditCity = async (cityData) => {
+    if (!selectedCity) return;
+
+    try {
+      await citiesApi.update(selectedCity.cityId, cityData);
+      // Update the selected city state with new data
+      setSelectedCity({
+        ...selectedCity,
+        ...cityData
+      });
+      setShowEditCity(false);
+      // Trigger sidebar to refresh cities list
+      window.dispatchEvent(new CustomEvent('cityUpdated'));
+    } catch (error) {
+      console.error("Failed to update city:", error);
+      alert("Failed to update city. Please try again.");
+    }
   };
 
   // Keys for persistence
@@ -390,67 +412,89 @@ const navigate = useNavigate();
                   )}
                 </div>
                 {/* Right side - User actions */}
-          <div className="flex items-center gap-4">
-            {/* Create Account Button (Admin only) */}
-            {isAdmin && (
-              <button
-                onClick={() => setIsCreateAccountOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-600 transition-all shadow-sm"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden sm:inline">Create Account</span>
-              </button>
-            )}
+                <div className="flex items-center gap-4">
+                  {/* Admin Actions */}
+                  {isAdmin && (
+                    <>
+                      {/* Edit City Button (shown when city is selected) */}
+                      {selectedCity && (
+                        <button
+                          onClick={() => setShowEditCity(true)}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg font-medium hover:from-amber-700 hover:to-amber-600 transition-all shadow-sm"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span className="hidden sm:inline">Edit City</span>
+                        </button>
+                      )}
 
-            {/* User Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
-                </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user.role}</p>
-                </div>
-              </button>
+                      {/* Create Account Button */}
+                      <button
+                        onClick={() => setIsCreateAccountOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-600 transition-all shadow-sm"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        <span className="hidden sm:inline">Create Account</span>
+                      </button>
+                    </>
+                  )}
 
-              {/* User Dropdown Menu */}
-              {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-40">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                    <Badge className="mt-1 capitalize" variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                      {user.role}
-                    </Badge>
+                  {/* User Menu */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                      </div>
+                      <div className="hidden sm:block text-left">
+                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                        <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                      </div>
+                    </button>
+
+                    {/* User Dropdown Menu */}
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-40">
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                          <Badge className="mt-1 capitalize" variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                            {user.role}
+                          </Badge>
+                        </div>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                  </button>
                 </div>
-              )}
-            </div>
-            </div>
               </div>
             </div>
           </header>
 
           {/* Create Account Modal */}
-      <CreateAccountModal
-        isOpen={isCreateAccountOpen}
-        onClose={() => setIsCreateAccountOpen(false)}
-        onAccountCreated={() => {
-          // Optional: Refresh users list or show notification
-          console.log('New account created');
-        }}
-      />
+          <CreateAccountModal
+            isOpen={isCreateAccountOpen}
+            onClose={() => setIsCreateAccountOpen(false)}
+            onAccountCreated={() => {
+              // Optional: Refresh users list or show notification
+              console.log('New account created');
+            }}
+          />
+
+          {/* Edit City Dialog */}
+          <EditCityDialog
+            open={showEditCity}
+            onOpenChange={setShowEditCity}
+            onEditCity={handleEditCity}
+            cityData={selectedCity}
+          />
 
           {/* Progress Bar for Loading */}
           {refreshProgress > 0 && refreshProgress < 100 && (

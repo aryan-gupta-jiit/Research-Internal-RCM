@@ -83,6 +83,14 @@ export function AppSidebar({
 
     useEffect(() => {
         fetchCities();
+
+        // Listen for city updates
+        const handleCityUpdate = () => {
+            fetchCities();
+        };
+
+        window.addEventListener('cityUpdated', handleCityUpdate);
+        return () => window.removeEventListener('cityUpdated', handleCityUpdate);
     }, []);
 
     useEffect(() => {

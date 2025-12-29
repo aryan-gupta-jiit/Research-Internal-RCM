@@ -46,8 +46,8 @@
 
 import axios from 'axios';
 
-// const API_BASE_URL = 'http://localhost:5000/api';
-const API_BASE_URL = 'https://yescityreasearchdashboard.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = 'https://yescityreasearchdashboard.onrender.com/api';
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -60,6 +60,7 @@ export const citiesApi = {
   getAll: () => api.get('/cities/'),
   getById: (cityId) => api.get(`/cities/${cityId}`),
   create: (cityData) => api.post('/cities/create', cityData),
+  update: (cityId, cityData) => api.put(`/cities/${cityId}`, cityData),
 };
 
 // Generic category API functions

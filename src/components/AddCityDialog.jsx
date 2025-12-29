@@ -4,6 +4,7 @@ export function AddCityDialog({ open, onOpenChange, onAddCity }) {
   const [cityName, setCityName] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [content, setContent] = useState("");
+  const [onSite, setOnSite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -18,11 +19,13 @@ export function AddCityDialog({ open, onOpenChange, onAddCity }) {
         cityName: cityName.trim(),
         coverImage: coverImage.trim() || undefined,
         content: content.trim() || undefined,
+        onSite: onSite,
       });
       // reset fields
       setCityName("");
       setCoverImage("");
       setContent("");
+      setOnSite(false);
     } finally {
       setLoading(false);
     }
@@ -218,6 +221,28 @@ export function AddCityDialog({ open, onOpenChange, onAddCity }) {
                   e.target.style.boxShadow = 'none';
                 }}
               />
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                <input
+                  type="checkbox"
+                  checked={onSite}
+                  onChange={(e) => setOnSite(e.target.checked)}
+                  style={{
+                    width: '1.25rem',
+                    height: '1.25rem',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6'
+                  }}
+                />
+                <span style={{ color: '#374151', fontWeight: '500' }}>
+                  On Site
+                </span>
+                <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                  (Mark this city as currently active/on site)
+                </span>
+              </label>
             </div>
 
             <div style={{
