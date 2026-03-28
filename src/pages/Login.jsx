@@ -12,7 +12,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const {login} = useAuth()
+  const { login } = useAuth()
 
   const handleChange = (e) => {
     setFormData({
@@ -28,7 +28,8 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await fetch('https://yescityreasearchdashboard.onrender.com/api/users/login', {
+      // const response = await fetch('https://yescityreasearchdashboard.onrender.com/api/users/login', {
+      const response = await fetch('https://reasearchdashboard.onrender.com/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

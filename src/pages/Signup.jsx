@@ -30,7 +30,8 @@ const CreateAccountModal = ({ isOpen, onClose, onAccountCreated }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://yescityreasearchdashboard.onrender.com/api/users/create-account', {
+      // const response = await fetch('https://yescityreasearchdashboard.onrender.com/api/users/create-account', {
+      const response = await fetch('https://reasearchdashboard.onrender.com/api/users/create-account', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
